@@ -16,6 +16,12 @@ namespace BookClasses
         private List<Book> books;
         private bool disposed = false;
 
+        public BookListService()
+        {
+            stream = null;
+            books = new List<Book>();
+        }
+
         public BookListService(Stream stream)
         {
             this.stream = stream;
@@ -44,35 +50,19 @@ namespace BookClasses
             }
         }
 
-        public List<Book> FindByTag(string author = "", string title = "", int length = 0, int yearOfPublishing = 0, int editionNumber = 0)
+        public List<Book> FindByTag(Predicate<Book> predicate)
         {
             if (disposed)
             {
                 throw new ObjectDisposedException(nameof(this.GetType));
             }
-            List<Book> result = books;
-            if (!string.IsNullOrEmpty(author))
+            if (predicate == null)
             {
-                result = result.FindAll(book => book.Author == author);
+                throw new ArgumentNullException();
             }
-            if (!string.IsNullOrEmpty(title))
-            {
-                result = result.FindAll(book => book.Title == title);
-            }
-            if (length >= 0)
-            {
-                result = result.FindAll(book => book.Length == length);
-            }
-            if (yearOfPublishing != 0)
-            {
-                result = result.FindAll(book => book.YearOfPublishing == yearOfPublishing);
-            }
-            if (editionNumber != 0)
-            {
-                result = result.FindAll(book => book.EditionNumber == editionNumber);
-            }
+            List<Book> result = books.FindAll(predicate);
             return result;
-        }
+        } 
 
         public void SortBooksByTag(IComparer<Book> comparer)
         {
@@ -103,6 +93,28 @@ namespace BookClasses
             }
         }
 
+        public void Load(Stream input)
+        {
+            if (input == null)
+                throw new ArgumentNullException();
+            stream = input;
+            GetBooks();
+        }
+
+        public void Save(Stream output)
+        {
+            if (output == null)
+                throw new ArgumentNullException();
+            stream = output;
+            WriteBooks();
+        }
+
+        public void Dispose()
+        {
+            WriteBooks();
+            disposed = true;
+        }
+
         private List<Book> GetBooks()
         {
             if (disposed)
@@ -130,15 +142,11 @@ namespace BookClasses
             }
             return result;
         }
-        
-        public void Dispose()
-        {
-            WriteBooks();
-            disposed = true;
-        }
 
         private void WriteBooks()
         {
+            if (stream == null)
+                return;
             if (disposed)
             {
                 throw new ObjectDisposedException(nameof(this.GetType));

@@ -22,7 +22,7 @@ namespace BookListServiceConsole
             //book.YearOfPublishing = 1999;
             //book.EditionNumber = 0;
             //service.AddBook(book);
-            List<Book> list = service.FindByTag(length:100);
+            List<Book> list = service.FindByTag(b => book.Length == 100);
             foreach (Book result in list)
             {
                 Console.WriteLine(result.ToString());
